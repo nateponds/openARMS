@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Logs</title>
+  <style>
+    :root {
+      --primary: #1a6b4a;
+      --primary-light: #e8f5ee;
+      --primary-mid: #2d9166;
+      --accent: #e67e22;
+      --accent-light: #fef3e8;
+      --danger: #c0392b;
+      --danger-light: #fdecea;
+      --warning: #d68910;
+      --warning-light: #fef9e7;
+      --gray-50: #f8f9fa;
+      --gray-100: #f1f3f5;
+      --gray-200: #e9ecef;
+      --gray-400: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+      --radius: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f2; color: var(--gray-900); min-height: 100vh; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 230px; background: var(--primary); color: #fff; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
+    .sidebar-brand { padding: 20px 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .sidebar-brand .logo { display: flex; align-items: center; gap: 10px; }
+    .sidebar-brand .logo-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .sidebar-brand h1 { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .sidebar-brand p { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; cursor: pointer; font-size: 13.5px; transition: background 0.15s; color: rgba(255,255,255,0.85); margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 500; }
+    .nav-item .nav-icon { font-size: 17px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 14px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 11px; opacity: 0.6; }
+    .main { margin-left: 230px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: #fff; padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .content { padding: 24px 28px; flex: 1; }
+    .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th { background: var(--gray-50); color: var(--gray-600); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--gray-200); white-space: nowrap; }
+    td { padding: 11px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 600; }
+    .badge-in { background: #e3f4e8; color: #1e6b31; }
+    .badge-out { background: var(--danger-light); color: var(--danger); }
+    .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .toolbar-left { flex: 1; display: flex; gap: 10px; flex-wrap: wrap; }
+    select.filter-select { width: auto; padding: 8px 11px; border: 1px solid var(--gray-200); border-radius: 7px; font-size: 13.5px; font-family: inherit; }
+    input, select, textarea { padding: 8px 11px; border: 1px solid var(--gray-200); border-radius: 7px; font-size: 13.5px; font-family: inherit; color: var(--gray-900); background: #fff; outline: none; transition: border-color 0.15s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,107,74,0.08); }
+    .btn { padding: 8px 16px; border-radius: 7px; border: none; cursor: pointer; font-size: 13.5px; font-weight: 500; font-family: inherit; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #165a3d; }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-800); }
+    .btn-secondary:hover { background: var(--gray-200); }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 12px; box-shadow: var(--shadow-md); padding: 24px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray-600); line-height: 1; padding: 0; }
+    .modal-close:hover { color: var(--gray-900); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12.5px; font-weight: 500; color: var(--gray-600); }
+    textarea { resize: vertical; min-height: 72px; width: 100%; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-600); }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-900); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13.5px; z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.25s; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: var(--primary); }
+    #toast.error { background: var(--danger); }
+    @media (max-width: 900px) {
+      .sidebar { width: 58px; }
+      .sidebar .nav-item span, .sidebar-brand h1, .sidebar-brand p, .sidebar-footer { display: none; }
+      .main { margin-left: 58px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div id="sidebar-container"></div>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">Stock Logs</div>
+      <div class="topbar-right">
+        <span style="font-size:13px;color:var(--gray-600);">Admin</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <select class="filter-select" id="log-action-filter" onchange="filterLogs()">
+            <option value="">All Actions</option>
+            <option value="IN">Stock In</option>
+            <option value="OUT">Stock Out</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="openAddLog()">+ Log Movement</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Item</th><th>Action</th><th>Qty</th><th>Unit</th><th>Reason</th><th>By</th><th>Date</th></tr>
+            </thead>
+            <tbody id="log-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Log Movement Modal -->
+<div class="modal-overlay" id="modal-log">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Log Stock Movement</h2>
+      <button class="modal-close" onclick="closeModal('modal-log')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Item *</label>
+        <select id="log-item"><option value="">Select item...</option></select>
+      </div>
+      <div class="form-group"><label>Action *</label>
+        <select id="log-action">
+          <option value="IN">Stock In</option>
+          <option value="OUT">Stock Out</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Quantity *</label><input type="number" id="log-qty" min="0.1" step="0.1" placeholder="0"></div>
+      <div class="form-group full"><label>Reason</label><input type="text" id="log-reason" placeholder="e.g. Daily feeding, Donation, Restocked..."></div>
+      <div class="form-group full"><label>Performed By</label><input type="text" id="log-by" placeholder="Staff name"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-log')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLog()">Log Movement</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let allLogs = [], allItems = [];
+
+fetch('sidebar.html')
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById('sidebar-container').innerHTML = html;
+    document.querySelectorAll('.nav-item')[3].classList.add('active');
+  });
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 2500);
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-PH', {month:'short',day:'numeric',year:'numeric'});
+}
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  return r.json();
+}
+
+async function loadLogs() {
+  [allLogs, allItems] = await Promise.all([api('/logs'), api('/items')]);
+  renderLogs(allLogs);
+}
+
+function renderLogs(rows) {
+  document.getElementById('log-tbody').innerHTML = rows.length ? rows.map(l => `
+    <tr>
+      <td><strong>${l.item_name}</strong></td>
+      <td><span class="badge badge-${l.action.toLowerCase()}">${l.action === 'IN' ? '↓ Stock In' : '↑ Stock Out'}</span></td>
+      <td>${l.quantity}</td>
+      <td style="font-size:12.5px;color:var(--gray-600)">${l.unit}</td>
+      <td style="font-size:12.5px">${l.reason || '—'}</td>
+      <td style="font-size:12.5px;color:var(--gray-600)">${l.performed_by || '—'}</td>
+      <td style="font-size:12.5px;color:var(--gray-600)">${fmt(l.logged_at)}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><p>No logs yet</p></div></td></tr>';
+}
+
+function filterLogs() {
+  const act = document.getElementById('log-action-filter').value;
+  renderLogs(allLogs.filter(l => !act || l.action === act));
+}
+
+function openAddLog() {
+  document.getElementById('log-qty').value = '';
+  document.getElementById('log-reason').value = '';
+  document.getElementById('log-by').value = '';
+  document.getElementById('log-item').innerHTML = '<option value="">Select item...</option>' +
+    allItems.map(i => `<option value="${i.item_id}">${i.name}</option>`).join('');
+  document.getElementById('modal-log').classList.add('open');
+}
+
+async function saveLog() {
+  const data = {
+    item_id: document.getElementById('log-item').value,
+    action: document.getElementById('log-action').value,
+    quantity: parseFloat(document.getElementById('log-qty').value),
+    reason: document.getElementById('log-reason').value,
+    performed_by: document.getElementById('log-by').value
+  };
+  if (!data.item_id || !data.quantity) return toast('Fill required fields', 'error');
+  await api('/logs', 'POST', data);
+  closeModal('modal-log');
+  toast('Movement logged');
+  loadLogs();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+loadLogs();
+</script>
+</body>
+</html>

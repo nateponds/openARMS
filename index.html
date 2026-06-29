@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    :root {
+      --primary: #1a6b4a;
+      --primary-light: #e8f5ee;
+      --primary-mid: #2d9166;
+      --accent: #e67e22;
+      --accent-light: #fef3e8;
+      --danger: #c0392b;
+      --danger-light: #fdecea;
+      --warning: #d68910;
+      --warning-light: #fef9e7;
+      --gray-50: #f8f9fa;
+      --gray-100: #f1f3f5;
+      --gray-200: #e9ecef;
+      --gray-400: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+      --radius: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f2; color: var(--gray-900); min-height: 100vh; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 230px; background: var(--primary); color: #fff; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
+    .sidebar-brand { padding: 20px 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .sidebar-brand .logo { display: flex; align-items: center; gap: 10px; }
+    .sidebar-brand .logo-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .sidebar-brand h1 { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .sidebar-brand p { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; cursor: pointer; font-size: 13.5px; transition: background 0.15s; color: rgba(255,255,255,0.85); margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 500; }
+    .nav-item .nav-icon { font-size: 17px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 14px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 11px; opacity: 0.6; }
+    .main { margin-left: 230px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: #fff; padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .alert-badge { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+    .content { padding: 24px 28px; flex: 1; }
+    .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; border-left: 4px solid var(--primary); }
+    .stat-card.warning { border-left-color: var(--warning); }
+    .stat-card.danger { border-left-color: var(--danger); }
+    .stat-card.accent { border-left-color: var(--accent); }
+    .stat-label { font-size: 11.5px; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--gray-900); }
+    .stat-sub { font-size: 11px; color: var(--gray-600); margin-top: 3px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .alert-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .alert-dot.danger { background: var(--danger); }
+    .alert-dot.warning { background: var(--warning); }
+    .alert-text { flex: 1; font-size: 13px; }
+    .alert-text strong { display: block; }
+    .alert-text span { color: var(--gray-600); font-size: 12px; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 600; }
+    .badge-food { background: #e3f4e8; color: #1e6b31; }
+    .badge-medicine { background: #eae3f4; color: #4a1e6b; }
+    .badge-supplies { background: #e3eef4; color: #1e4a6b; }
+    .badge-ok { background: var(--primary-light); color: var(--primary); }
+    .badge-low { background: var(--warning-light); color: var(--warning); }
+    .badge-expired { background: var(--danger-light); color: var(--danger); }
+    .badge-expiring { background: var(--warning-light); color: var(--warning); }
+    .feed-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); align-items: flex-start; }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+    .feed-dot.in { background: #e3f4e8; color: #1e6b31; }
+    .feed-dot.out { background: var(--danger-light); color: var(--danger); }
+    .feed-body { flex: 1; font-size: 13px; }
+    .feed-body strong { display: block; }
+    .feed-body time { font-size: 11.5px; color: var(--gray-600); }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-600); }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .empty-state p { font-size: 14px; }
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-900); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13.5px; z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.25s; pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: var(--primary); }
+    #toast.error { background: var(--danger); }
+    @media (max-width: 900px) {
+      .sidebar { width: 58px; }
+      .sidebar .nav-item span, .sidebar-brand h1, .sidebar-brand p, .sidebar-footer { display: none; }
+      .main { margin-left: 58px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div id="sidebar-container"></div>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <span id="alert-count-badge" class="alert-badge" style="display:none">0 alerts</span>
+        <span style="font-size:13px;color:var(--gray-600);">Admin</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="s-items">–</div><div class="stat-sub">inventory types</div></div>
+        <div class="stat-card"><div class="stat-label">Total Qty</div><div class="stat-value" id="s-qty">–</div><div class="stat-sub">units in stock</div></div>
+        <div class="stat-card warning"><div class="stat-label">Low Stock</div><div class="stat-value" id="s-low">–</div><div class="stat-sub">items need restock</div></div>
+        <div class="stat-card danger"><div class="stat-label">Expired</div><div class="stat-value" id="s-exp">–</div><div class="stat-sub">items past expiry</div></div>
+        <div class="stat-card accent"><div class="stat-label">Donations</div><div class="stat-value" id="s-don">–</div><div class="stat-sub">total records</div></div>
+        <div class="stat-card"><div class="stat-label">Suppliers</div><div class="stat-value" id="s-sup">–</div><div class="stat-sub">registered vendors</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:18px;">
+        <div class="card">
+          <div class="card-title">📦 Stock by Category</div>
+          <div id="category-breakdown"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ Recent Activity</div>
+          <div id="recent-activity"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🚨 Active Alerts</div>
+        <div id="dashboard-alerts"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+
+// Load sidebar
+fetch('sidebar.html')
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById('sidebar-container').innerHTML = html;
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
+  });
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 2500);
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-PH', {month:'short',day:'numeric',year:'numeric'});
+}
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  return r.json();
+}
+
+async function loadDashboard() {
+  const [stats, alerts] = await Promise.all([api('/stats'), api('/alerts')]);
+  document.getElementById('s-items').textContent = stats.total_items;
+  document.getElementById('s-qty').textContent = stats.total_quantity.toLocaleString();
+  document.getElementById('s-low').textContent = stats.low_stock_count;
+  document.getElementById('s-exp').textContent = stats.expired_count;
+  document.getElementById('s-don').textContent = stats.total_donations;
+  document.getElementById('s-sup').textContent = stats.total_suppliers;
+
+  const totalAlerts = alerts.low_stock.length + alerts.expired.length + alerts.expiring_soon.length;
+  const badge = document.getElementById('alert-count-badge');
+  if (totalAlerts > 0) { badge.style.display=''; badge.textContent = totalAlerts + ' alerts'; }
+  else badge.style.display = 'none';
+
+  document.getElementById('category-breakdown').innerHTML = stats.by_category.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge badge-${c.category.toLowerCase()}">${c.category}</span>
+        <span style="font-size:13px">${c.count} item types</span>
+      </div>
+      <strong style="font-size:14px">${c.total_qty.toLocaleString()} units</strong>
+    </div>
+  `).join('');
+
+  document.getElementById('recent-activity').innerHTML = stats.recent_logs.map(l => `
+    <div class="feed-item">
+      <div class="feed-dot ${l.action.toLowerCase()}">${l.action === 'IN' ? '↓' : '↑'}</div>
+      <div class="feed-body">
+        <strong>${l.action === 'IN' ? '+' : '-'}${l.quantity} units — ${l.item_name}</strong>
+        <time>${fmt(l.logged_at)}</time>
+      </div>
+    </div>
+  `).join('');
+
+  const allA = [
+    ...alerts.expired.map(a => ({...a, type:'danger', msg:`<strong>${a.name}</strong> — expired (${a.shelter_name})`})),
+    ...alerts.low_stock.map(a => ({...a, type:'warning', msg:`<strong>${a.name}</strong> — low stock: ${a.quantity} left (min ${a.min_stock})`})),
+    ...alerts.expiring_soon.map(a => ({...a, type:'warning', msg:`<strong>${a.name}</strong> — expires ${fmt(a.expiry_date)} (${a.shelter_name})`}))
+  ];
+  document.getElementById('dashboard-alerts').innerHTML = allA.length ? allA.map(a => `
+    <div class="alert-item">
+      <div class="alert-dot ${a.type}"></div>
+      <div class="alert-text">${a.msg}</div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="empty-icon">✅</div><p>No active alerts</p></div>';
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
