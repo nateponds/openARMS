@@ -1,0 +1,143 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
+CREATE TABLE Suppliers (
+  supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+  supplier_name VARCHAR(120) NOT NULL,
+  contact VARCHAR(80) NULL,
+  email VARCHAR(120) NULL,
+  address VARCHAR(150) NULL,
+  supplier_type VARCHAR(50) NOT NULL DEFAULT 'General',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Shelters (
+  shelter_id INT AUTO_INCREMENT PRIMARY KEY,
+  shelter_name VARCHAR(150) NOT NULL,
+  address VARCHAR(200) NOT NULL,
+  contact_person VARCHAR(120),
+  contact_number VARCHAR(30),
+  capacity INT,
+  shelter_type VARCHAR(70),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Personnel (
+  personnel_id INT AUTO_INCREMENT PRIMARY KEY,
+  personnel_name VARCHAR(120) NOT NULL,
+  role VARCHAR(70) NULL,
+  phone VARCHAR(30) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Items (
+  item_id INT AUTO_INCREMENT PRIMARY KEY,
+
+  shelter_id INT NOT NULL,
+
+  item_name VARCHAR(100) NOT NULL,
+  item_type VARCHAR(50) NOT NULL,
+  unit VARCHAR(30) NOT NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+
+  received_date DATE NOT NULL,
+  expiry_date DATE NULL,
+  notes VARCHAR(300) NULL,
+
+  on_hand_qty DECIMAL(12,3) NOT NULL DEFAULT 0,
+  initial_qty DECIMAL(12,3) NOT NULL,
+
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_items_shelter
+    FOREIGN KEY (shelter_id) REFERENCES Shelters(shelter_id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE ShelterInventory (
+  shelter_inventory_id INT AUTO_INCREMENT PRIMARY KEY,
+  shelter_id INT NOT NULL,
+  item_id INT NOT NULL,
+  min_stock DECIMAL(12,3) NOT NULL DEFAULT 0,
+
+  CONSTRAINT fk_si_shelter
+    FOREIGN KEY (shelter_id) REFERENCES Shelters(shelter_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT fk_si_item
+    FOREIGN KEY (item_id) REFERENCES Items(item_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT uq_si_shelter_item UNIQUE (shelter_id, item_id)
+);
+
+CREATE TABLE InventoryLogs (
+  transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+  transaction_date DATE NOT NULL,
+
+  item_id INT NOT NULL,
+  shelter_id INT NOT NULL,
+
+  quantity DECIMAL(12,3) NOT NULL,
+  transaction_type ENUM('IN','OUT','TRANSFER','ADJUST') NOT NULL,
+
+  personnel_id INT NOT NULL,
+  transaction_notes VARCHAR(300) NULL,
+
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_il_item
+    FOREIGN KEY (item_id) REFERENCES Items(item_id)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
+
+  CONSTRAINT fk_il_shelter
+    FOREIGN KEY (shelter_id) REFERENCES Shelters(shelter_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT fk_il_personnel
+    FOREIGN KEY (personnel_id) REFERENCES Personnel(personnel_id)
+    ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE Donations (
+  donation_id INT AUTO_INCREMENT PRIMARY KEY,
+
+  donor_name VARCHAR(100) NULL,
+  description VARCHAR(150) NULL,
+
+  shelter_id INT NULL,
+  supplier_id INT NULL,
+
+  received_date DATE NOT NULL,
+  receipt_notes VARCHAR(300) NULL,
+
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_don_shelter
+    FOREIGN KEY (shelter_id) REFERENCES Shelters(shelter_id)
+    ON UPDATE CASCADE ON DELETE SET NULL,
+
+  CONSTRAINT fk_don_supplier
+    FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
+    ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE DonationLines (
+  donation_line_id INT AUTO_INCREMENT PRIMARY KEY,
+  donation_id INT NOT NULL,
+
+  item_id INT NOT NULL,
+  item_quantity DECIMAL(12,3) NOT NULL,
+
+  line_notes VARCHAR(300) NULL,
+
+  CONSTRAINT fk_dl_donation
+    FOREIGN KEY (donation_id) REFERENCES Donations(donation_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT fk_dl_item
+    FOREIGN KEY (item_id) REFERENCES Items(item_id)
+    ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+SET FOREIGN_KEY_CHECKS = 1;
