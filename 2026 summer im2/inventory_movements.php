@@ -556,7 +556,7 @@ input[type="text"], input[type="number"], input[type="date"], select { padding: 
 
 <div class="row">
 <label>Shelter</label><br>
-<select name="shelter_id" required onchange="/* remove auto-submit if you want */">
+<select name="shelter_id" required onchange="">
 <option value="">-- Select Shelter --</option>
 <?php
 $selShelter = (int)($_POST["shelter_id"] ?? 0);
